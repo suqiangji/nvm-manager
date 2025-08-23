@@ -1,0 +1,173 @@
+<!DOCTYPE html>
+<html>
+	<head>
+		<meta charset="utf-8">
+		<title></title>
+		<link rel="stylesheet" href="https://unpkg.com/element-ui/lib/theme-chalk/index.css">
+		<style>
+			body {
+				background: #f8f8f8;
+			}
+
+			.card {
+				margin: 20px 20px;
+				padding: 30px;
+				background: #fff;
+			}
+
+			.select-node {
+				border-radius: 10px;
+			}
+
+			.select-node__title {
+				font-weight: bold;
+				font-size: 20px;
+			}
+
+			::-webkit-scrollbar {
+				width: 5px;
+				/* height: 10px; */
+			}
+
+			::-webkit-scrollbar-track {
+				background: #f1f1f1;
+			}
+			::-webkit-scrollbar-thumb {
+				background: #888;
+				border-radius: 5px;
+			}
+
+			::-webkit-scrollbar-thumb:hover {
+				background: #555;
+			}
+		</style>
+	</head>
+	<body>
+		<div id="app">
+			<div class="node-container">
+				<el-alert
+					title="温馨提示: 该工具依赖NVM，如您未安装请先安装"
+					:closable="false"
+					type="success">
+				</el-alert>
+				<div class="select-node card">
+					<p class="select-node__title">选择NODE版本安装</p>
+					<el-select v-model="installVersion" placeholder="选择NODE版本安装" style="width: 100%;margin-bottom: 10px;">
+						<el-option v-for="(item) in availableVersions" :label="item" :value="item"></el-option>
+					</el-select>
+					<el-button style="width: 100%;" @click="confirmInstall">确认安装</el-button>
+				</div>
+				<div class="node-list card">
+					<el-table :data="versions" stripe style="width: 100%" height="250">
+						<el-table-column prop="version" label="版本">
+						</el-table-column>
+						<el-table-column prop="status" label="是否在用" width="100px">
+							<template slot-scope="scope">
+								<el-tag v-if="scope.row.status === 1">使用中</el-tag>
+								<el-tag v-else type="danger">未使用</el-tag>
+							</template>
+						</el-table-column>
+						<el-table-column label="操作" width="200px">
+							<template slot-scope="scope">
+								<el-button :disabled="scope.row.status === 1" size="mini" @click="handleUse(scope.row)">切换</el-button>
+								<el-button size="mini" type="danger" @click="handleDelete(scope.row)">删除</el-button>
+							</template>
+						</el-table-column>
+					</el-table>
+				</div>
+			</div>
+		</div>
+		<script src="https://unpkg.com/vue@2/dist/vue.js"></script>
+		<script src="https://unpkg.com/element-ui/lib/index.js"></script>
+
+		<script>
+			new Vue({
+				el: '#app',
+				data: function() {
+					return {
+						visible: false,
+						versions: [],
+						installVersion: '',
+						availableVersions: [],
+						loading: null
+					}
+				},
+				created() {
+					this.getNodeList()
+					this.getAvailableList()
+				},
+				methods: {
+					async getNodeList() {
+						const text = await window.nvmAPI.list()
+						const versions = text
+							.split('\n') // 以换行符分割
+							.map(line => line.replace('*', '').trim()).map(v => {
+								return {
+									version: v,
+									status: v.indexOf('Currently') > -1 ? 1 : 0
+								}
+							}).filter(v => v.version)
+
+						this.versions = versions
+					},
+					async handleDelete(row) {
+						const output = await window.nvmAPI.uninstall(row.version);
+						alert(`删除成功：\n${output}`)
+
+						this.getNodeList()
+					},
+					async handleUse(row) {
+						const output = await window.nvmAPI.use(row.version);
+						alert(`切换成功：\n${output}`)
+
+						this.getNodeList()
+					},
+					async getAvailableList() {
+						const text = await window.nvmAPI.available()
+						const versions = this.parseVersions(text)
+
+						this.availableVersions = versions
+					},
+					async confirmInstall() {
+						if (!this.installVersion) {
+							return alert('请先选择要安装的版本')
+						}
+
+						loading = this.$loading({
+							lock: true,
+							text: '安装中请稍等!',
+							spinner: 'el-icon-loading',
+							background: 'rgba(0, 0, 0, 0.7)'
+						})
+
+						const output = await window.nvmAPI.install(this.installVersion)
+						loading.close()
+						alert(`安装成功：\n${output}`)
+
+						this.getNodeList()
+					},
+					parseVersions(data) {
+						const rows = data.split('\n').filter(row => row.trim() !== '' && !row.includes('|--------------'));
+
+						const versions = rows.map(row => row.split('|').slice(1, -1).map(item => item.trim()))
+
+						versions.splice(0, 1)
+
+						const flatVersions = [];
+						const numColumns = versions[0].length;
+
+						for (let i = 0; i < numColumns; i++) {
+							versions.forEach(row => {
+								if (row[i]) {
+									flatVersions.push(row[i])
+								}
+							})
+						}
+
+						return flatVersions;
+					}
+				}
+			})
+		</script>
+	</body>
+</html>

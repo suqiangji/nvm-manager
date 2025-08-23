@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>nvm Manager</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      margin: 20px;
+    }
+    button {
+      padding: 10px 15px;
+      font-size: 16px;
+      cursor: pointer;
+    }
+    pre {
+      background: #f4f4f4;
+      padding: 10px;
+      border: 1px solid #ddd;
+      font-size: 14px;
+    }
+  </style>
+</head>
+<body>
+  <h1>nvm 管理工具</h1>
+
+  <h2>安装 Node.js 版本</h2>
+  <input type="text" id="version" placeholder="请输入 Node.js 版本" />
+  <button id="installBtn">安装</button>
+
+  <h2>当前安装的 Node.js 版本</h2>
+  <button id="listBtn">查看已安装版本</button>
+  <pre id="versionList"></pre>
+
+  <h2>切换 Node.js 版本</h2>
+  <input type="text" id="useVersion" placeholder="请输入要切换的版本" />
+  <button id="useBtn">切换</button>
+
+  <script>
+    // 显示已安装版本
+    document.getElementById('listBtn').addEventListener('click', async () => {
+      const versionList = await window.nvmAPI.list();
+      document.getElementById('versionList').textContent = versionList;
+    });
+
+    // 安装指定版本
+    document.getElementById('installBtn').addEventListener('click', async () => {
+      const version = document.getElementById('version').value;
+      if (version) {
+        const output = await window.nvmAPI.install(version);
+        alert(`安装成功：\n${output}`);
+      } else {
+        alert('请输入版本号');
+      }
+    });
+
+    // 切换指定版本
+    document.getElementById('useBtn').addEventListener('click', async () => {
+      const version = document.getElementById('useVersion').value;
+      if (version) {
+        const output = await window.nvmAPI.use(version);
+        alert(`切换成功：\n${output}`);
+      } else {
+        alert('请输入要切换的版本号');
+      }
+    });
+  </script>
+</body>
+</html>

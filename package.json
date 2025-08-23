@@ -1,0 +1,25 @@
+{
+	"name": "nvm-manager",
+	"version": "1.0.0",
+	"main": "main.js",
+	"license": "MIT",
+	"scripts": {
+		"dev": "cross-env NODE_ENV=development electron .",
+		"app": "electron-builder"
+	},
+	"devDependencies": {
+		"cross-env": "^10.0.0",
+		"electron": "^26.6.10",
+		"electron-builder": "^24.6.4"
+	},
+	"build": {
+		"productName": "NVM-MANAGER",
+		"nsis": {
+			"oneClick": false,
+			"allowToChangeInstallationDirectory": true
+		},
+		"win": {
+			"icon": "assets/icons/win/icon.png"
+		}
+	}
+}
