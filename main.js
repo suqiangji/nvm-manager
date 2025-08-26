@@ -1,4 +1,4 @@
-const { app, BrowserWindow, ipcMain } = require('electron');
+const { app, BrowserWindow, ipcMain, globalShortcut } = require('electron');
 const { exec } = require('child_process');
 const path = require('path');
 
@@ -15,8 +15,11 @@ function createWindow() {
     }
   });
 	
+	
+	
 	win.setMenu(null);  
 	
+	addShortcut()
 	if(process.env.NODE_ENV === 'development') {
 		win.webContents.openDevTools(); 
 	}
@@ -96,3 +99,12 @@ ipcMain.handle('nvm-uninstall', (event, version) => {
   });
 });
 
+function addShortcut() {
+  globalShortcut.register("Ctrl+N", () => {
+    if (mainWindow.isMinimized()) {
+      mainWindow.restore();
+    } else {
+      mainWindow.minimize();
+    }
+  });
+}
